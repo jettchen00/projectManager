@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="44e343c9-eee0-4eca-a78e-a787fbff0eec" name="projetctManager" url="/">
+        <fileTransfer rootFolder="/data/home/jettchen" accessType="SFTP" host="21.6.136.108" port="36000" sshConfigId="715ca5a9-e2c8-4b7b-9845-89b969b84c90" sshConfig="jettchen@21.6.136.108:36000 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

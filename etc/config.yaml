@@ -1,0 +1,22 @@
+# projectManager 核心运行时配置
+# 规则 R08：敏感信息（如生产环境的 mongo 账号密码）请通过环境变量覆盖：
+#   MONGO_URI / MONGO_DB / HTTP_ADDR / WEB_DIR / CONFIG_FILE
+# 环境变量优先级高于本文件。
+
+# HTTP 监听地址
+http_addr: ":8080"
+
+# 前端静态资源目录（相对进程工作目录或绝对路径）
+web_dir: "web"
+
+# 进程优雅退出最大等待时长（秒）
+shutdown_timeout_seconds: 5
+
+# MongoDB 配置
+mongo:
+  uri: "mongodb://127.0.0.1:27017"
+  db: "project_manager"
+  # 建立连接的最大超时（秒）
+  connect_timeout_seconds: 10
+  # ping 探活的最大超时（秒）
+  ping_timeout_seconds: 5

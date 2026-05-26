@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>项目管理后台</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">项目管理后台</div>
+    <div class="user-bar">
+      <label>用户ID <input id="user_id" placeholder="例如 u-001" /></label>
+      <label>姓名 <input id="user_name" placeholder="可选" /></label>
+      <label>角色
+        <select id="user_role">
+          <option value="applicant">applicant 申请人</option>
+          <option value="editor">editor 协办人</option>
+          <option value="reviewer">reviewer 审核人</option>
+          <option value="approver">approver 审批人</option>
+          <option value="admin">admin 管理员</option>
+          <option value="viewer">viewer 查看者</option>
+        </select>
+      </label>
+      <button id="save_user_btn">保存身份</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-view="list">项目列表</button>
+    <button class="tab" data-view="create">新建立项</button>
+    <button class="tab" data-view="todos">我的待办</button>
+  </nav>
+
+  <main id="main"></main>
+
+  <!-- 视图模板 -->
+  <template id="tpl-list">
+    <section class="card">
+      <div class="filter-bar">
+        <input id="f_keyword" placeholder="项目名称/编号/业主关键字" />
+        <select id="f_status">
+          <option value="">全部状态</option>
+          <option value="FORM_EDITING">FORM_EDITING 表格填报中</option>
+          <option value="PENDING_REVIEW">PENDING_REVIEW 待审核</option>
+          <option value="PENDING_APPROVE">PENDING_APPROVE 待审批</option>
+          <option value="APPROVED">APPROVED 已审批</option>
+        </select>
+        <button id="btn_search">查询</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>项目编号</th><th>项目名称</th><th>业主单位</th>
+            <th>状态</th><th>版本</th><th>申请人</th><th>更新时间</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="list_tbody"></tbody>
+      </table>
+      <div class="page-bar"><span id="list_total"></span></div>
+    </section>
+  </template>
+
+  <template id="tpl-create">
+    <section class="card form-card">
+      <h2>新建项目（最小信息立项）</h2>
+      <div class="grid">
+        <label>项目名称<span class="req">*</span><input id="c_project_name" /></label>
+        <label>业主单位名称<span class="req">*</span><input id="c_owner_name" /></label>
+        <label>业主类型
+          <select id="c_owner_type">
+            <option value="">请选择</option>
+            <option>政府</option><option>企业</option>
+            <option>事业单位</option><option>其他</option>
+          </select>
+        </label>
+        <label>联系人<input id="c_contact_name" /></label>
+        <label>联系电话<input id="c_contact_phone" /></label>
+        <label>联系邮箱<input id="c_contact_email" /></label>
+        <label class="full">地址<input id="c_address" /></label>
+      </div>
+      <div class="actions">
+        <button id="btn_create">立项</button>
+      </div>
+      <div id="create_msg" class="msg"></div>
+    </section>
+  </template>
+
+  <template id="tpl-todos">
+    <section class="card">
+      <h2>我的待办</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>项目编号</th><th>项目名称</th><th>业主单位</th>
+            <th>状态</th><th>版本</th><th>更新时间</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="todo_tbody"></tbody>
+      </table>
+    </section>
+  </template>
+
+  <template id="tpl-detail">
+    <section class="card detail-card">
+      <div class="detail-head">
+        <h2 id="d_title"></h2>
+        <div class="detail-meta">
+          <span class="badge" id="d_status"></span>
+          <span>版本 R<b id="d_rev"></b></span>
+          <span>申请人 <b id="d_applicant"></b></span>
+        </div>
+        <div class="detail-actions">
+          <button id="btn_back">返回列表</button>
+          <button id="btn_submit_final">提交定稿</button>
+          <button id="btn_review_approve">审核通过</button>
+          <button id="btn_review_reject">审核驳回</button>
+          <button id="btn_final_approve">终审通过</button>
+          <button id="btn_final_reject">终审驳回</button>
+        </div>
+      </div>
+
+      <div class="tabs sub-tabs">
+        <button class="sub-tab active" data-pane="form">表格内容</button>
+        <button class="sub-tab" data-pane="logs">修改记录</button>
+        <button class="sub-tab" data-pane="approvals">审批事件</button>
+      </div>
+
+      <div class="pane" id="pane_form"></div>
+      <div class="pane hidden" id="pane_logs">
+        <div class="filter-bar">
+          <input id="lf_field_key" placeholder="字段 field_key 过滤" />
+          <input id="lf_operator_id" placeholder="操作人ID 过滤" />
+          <button id="btn_log_search">过滤</button>
+          <span class="diff-bar">
+            版本对比 from <input id="diff_from" type="number" min="0" /> to
+            <input id="diff_to" type="number" min="0" />
+            <button id="btn_diff">查看差异</button>
+          </span>
+        </div>
+        <table class="data-table">
+          <thead><tr>
+            <th>R</th><th>字段</th><th>旧值</th><th>新值</th>
+            <th>操作人</th><th>角色</th><th>时间</th><th>阶段</th><th>说明</th>
+          </tr></thead>
+          <tbody id="log_tbody"></tbody>
+        </table>
+      </div>
+      <div class="pane hidden" id="pane_approvals">
+        <table class="data-table">
+          <thead><tr>
+            <th>级别</th><th>动作</th><th>操作人</th><th>角色</th>
+            <th>意见</th><th>时间</th>
+          </tr></thead>
+          <tbody id="approval_tbody"></tbody>
+        </table>
+      </div>
+      <div id="detail_msg" class="msg"></div>
+    </section>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
