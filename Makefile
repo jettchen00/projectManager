@@ -11,9 +11,6 @@ tidy:
 build:
 	$(GO) build -o $(SERVER_BIN) ./cmd/server
 
-run:
-	$(GO) run ./cmd/server
-
 test:
 	$(GO) test ./...
 
