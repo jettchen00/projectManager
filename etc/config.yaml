@@ -8,7 +8,8 @@
 http_addr: ":8080"
 
 # 前端静态资源目录（相对进程工作目录或绝对路径）
-web_dir: "web"
+# 启动脚本会把工作目录设为项目根目录（APP_HOME），因此这里使用项目内相对路径
+web_dir: "./web"
 
 # 进程优雅退出最大等待时长（秒）
 shutdown_timeout_seconds: 5
@@ -29,7 +30,7 @@ mongo:
 # - format：json（默认，便于采集）或 console（人读友好）
 # - level：debug / info（默认） / warn / error
 log:
-  dir: "logs"
+  dir: "./log"
   max_size_mb: 100
   max_backups: 7
   format: "json"

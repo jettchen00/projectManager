@@ -22,12 +22,18 @@
   async function api(path, options = {}) {
     const u = Auth.get();
     if (!u.id) throw new Error('请先在右上角填写用户ID与角色');
+    // HTTP header 只允许 ISO-8859-1 字符，含中文等非 ASCII 内容必须编码后再传输。
+    const safeHeader = (s) => {
+      const v = (s == null ? '' : String(s));
+      // eslint-disable-next-line no-control-regex
+      return /^[\x00-\xFF]*$/.test(v) ? v : encodeURIComponent(v);
+    };
     const headers = Object.assign(
       {
         'Content-Type': 'application/json',
-        'X-User-Id': u.id,
-        'X-User-Role': u.role,
-        'X-User-Name': u.name,
+        'X-User-Id': safeHeader(u.id),
+        'X-User-Role': safeHeader(u.role),
+        'X-User-Name': safeHeader(u.name),
       },
       options.headers || {}
     );

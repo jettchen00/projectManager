@@ -2,6 +2,10 @@ package httpapi
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
+	pmlog "projectManager/internal/log"
+	"strings"
 
 	"projectManager/internal/middleware"
 	"projectManager/internal/router"
@@ -63,7 +67,42 @@ func BuildRouter(d *Deps, webDir string) http.Handler {
 	mux.Handle("/api/", r)
 	if webDir != "" {
 		fs := http.FileServer(http.Dir(webDir))
-		mux.Handle("/", fs)
+		mux.Handle("/", staticFileGuard(webDir, fs))
 	}
 	return mux
+}
+
+// staticFileGuard 在交给 http.FileServer 之前，先校验请求的静态文件是否存在；
+// 不存在则直接返回 404，避免 FileServer 对目录返回索引页或对缺失文件回落到其它行为。
+// 同时清理路径，防止通过 ".." 跳出 webDir。
+func staticFileGuard(webDir string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// 规范化 URL 路径，"/" 视为请求 index.html。
+		urlPath := req.URL.Path
+		if urlPath == "" || urlPath == "/" {
+			urlPath = "/index.html"
+		}
+		// 拼接到磁盘路径并清理，确保仍在 webDir 内。
+		cleaned := filepath.Clean("/" + strings.TrimPrefix(urlPath, "/"))
+		absRoot, err := filepath.Abs(webDir)
+		if err != nil {
+			pmlog.Errorf("static file path invalid, err=%v urlPath=%s", err, urlPath)
+			http.Error(w, "static file path invalid", http.StatusInternalServerError)
+			return
+		}
+		fullPath := filepath.Join(absRoot, cleaned)
+		if !strings.HasPrefix(fullPath, absRoot+string(filepath.Separator)) && fullPath != absRoot {
+			pmlog.Errorf("fullPath != absRoot, fullPath=%s absRoot=%s", fullPath, absRoot)
+			http.NotFound(w, req)
+			return
+		}
+		// 检查存在性：文件不存在 / 是目录 都视为 404。
+		info, err := os.Stat(fullPath)
+		if err != nil || info.IsDir() {
+			pmlog.Errorf("fullPath not exist, err=%v, fullPath=%s", err, fullPath)
+			http.NotFound(w, req)
+			return
+		}
+		next.ServeHTTP(w, req)
+	})
 }
