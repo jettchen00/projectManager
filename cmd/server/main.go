@@ -25,6 +25,15 @@ import (
 func main() {
 	cfg := config.Load()
 
+	// 初始化日志（按配置切换 stdout / 滚动文件，底层基于 zap + lumberjack）。
+	pmlog.Init(pmlog.Options{
+		Dir:        cfg.Log.Dir,
+		MaxSizeMB:  cfg.Log.MaxSizeMB,
+		MaxBackups: cfg.Log.MaxBackups,
+		Format:     cfg.Log.Format,
+		Level:      cfg.Log.Level,
+	})
+
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout())
 	defer cancel()
 

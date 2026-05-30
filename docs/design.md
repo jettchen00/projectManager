@@ -13,10 +13,10 @@
 | HTTP 框架  | `net/http` + 轻量自研路由（`internal/router`） | 减少外部依赖；规则 R12（最简化） |
 | 存储       | MongoDB（官方驱动 `go.mongodb.org/mongo-driver`） | 规则 R05 |
 | 鉴权       | HTTP Header `X-User-Id`、`X-User-Role`（演示用），中间件二次校验 | 规则 R08：敏感信息不硬编码 |
-| 配置       | 配置文件 `etc/config.yaml` 加载核心项；敏感字段（`MONGO_URI`/`MONGO_DB`/`HTTP_ADDR`/`WEB_DIR`/`CONFIG_FILE`）支持环境变量覆盖 | 规则 R08 |
+| 配置       | 配置文件 `etc/config.yaml` 加载核心项；敏感字段（`MONGO_URI`/`MONGO_DB`/`HTTP_ADDR`/`WEB_DIR`/`CONFIG_FILE`/`LOG_DIR`/`LOG_MAX_SIZE_MB`/`LOG_MAX_BACKUPS`）支持环境变量覆盖 | 规则 R08 |
 | 命名       | HTTP 字段统一 `snake_case`                    | 规则 R20 |
 | 响应       | 统一 `{ code, message, data }`                | 规则 R06 |
-| 日志       | 标准库 `log`，关键流程 INFO，异常 ERROR        | 规则 R10/R18 |
+| 日志       | `go.uber.org/zap` + `lumberjack`（按大小滚动），关键流程 INFO，异常 ERROR；门面 `internal/log` 保持 `Infof/Errorf/KV` 不变 | 规则 R10/R18 |
 | 测试       | `go test`                                     | 规则要求覆盖核心用例 |
 
 ---

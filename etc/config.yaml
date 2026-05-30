@@ -1,6 +1,7 @@
 # projectManager 核心运行时配置
 # 规则 R08：敏感信息（如生产环境的 mongo 账号密码）请通过环境变量覆盖：
 #   MONGO_URI / MONGO_DB / HTTP_ADDR / WEB_DIR / CONFIG_FILE
+#   LOG_DIR / LOG_MAX_SIZE_MB / LOG_MAX_BACKUPS / LOG_FORMAT / LOG_LEVEL
 # 环境变量优先级高于本文件。
 
 # HTTP 监听地址
@@ -20,3 +21,16 @@ mongo:
   connect_timeout_seconds: 10
   # ping 探活的最大超时（秒）
   ping_timeout_seconds: 5
+
+# 日志配置（底层基于 zap + lumberjack）
+# - dir 为空时输出到 stdout（默认，便于本地调试）；非空时按大小滚动写入 dir/app.log
+# - max_size_mb：单个日志文件超过该大小后自动滚动；<=0 取库默认值（100MB）
+# - max_backups：保留最近 N 个历史滚动文件；<=0 表示不限
+# - format：json（默认，便于采集）或 console（人读友好）
+# - level：debug / info（默认） / warn / error
+log:
+  dir: "logs"
+  max_size_mb: 100
+  max_backups: 7
+  format: "json"
+  level: "info"

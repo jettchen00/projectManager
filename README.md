@@ -50,17 +50,28 @@ mongo:
   db: "project_manager"
   connect_timeout_seconds: 10
   ping_timeout_seconds: 5
+log:
+  dir: "logs"          # 为空表示输出到 stdout；非空时按大小滚动写入 dir/app.log
+  max_size_mb: 100     # 单个文件超过该大小后滚动；<=0 取库默认值（100MB）
+  max_backups: 7       # 仅保留最近 N 个历史文件；<=0 表示不限
+  format: "json"       # json（默认） / console
+  level: "info"        # debug / info / warn / error
 ```
 
 ### 环境变量覆盖
 
-| Key           | 覆盖项                       | 说明 |
-|---------------|------------------------------|------|
-| `CONFIG_FILE` | 配置文件路径                 | 默认 `etc/config.yaml` |
-| `HTTP_ADDR`   | `http_addr`                  | 监听地址 |
-| `MONGO_URI`   | `mongo.uri`                  | MongoDB 连接串 |
-| `MONGO_DB`    | `mongo.db`                   | 数据库名 |
-| `WEB_DIR`     | `web_dir`                    | 前端静态资源目录 |
+| Key                | 覆盖项                       | 说明 |
+|--------------------|------------------------------|------|
+| `CONFIG_FILE`      | 配置文件路径                 | 默认 `etc/config.yaml` |
+| `HTTP_ADDR`        | `http_addr`                  | 监听地址 |
+| `MONGO_URI`        | `mongo.uri`                  | MongoDB 连接串 |
+| `MONGO_DB`         | `mongo.db`                   | 数据库名 |
+| `WEB_DIR`          | `web_dir`                    | 前端静态资源目录 |
+| `LOG_DIR`          | `log.dir`                    | 日志目录，为空则输出到 stdout |
+| `LOG_MAX_SIZE_MB`  | `log.max_size_mb`            | 单个日志文件滚动阈值（MB） |
+| `LOG_MAX_BACKUPS`  | `log.max_backups`            | 保留最近多少个滚动历史文件 |
+| `LOG_FORMAT`       | `log.format`                 | `json` / `console` |
+| `LOG_LEVEL`        | `log.level`                  | `debug` / `info` / `warn` / `error` |
 
 ## 启动
 

@@ -19,7 +19,13 @@ func TestLoadYAMLFile_ParsesTopLevelAndSection(t *testing.T) {
 		"  uri: \"mongodb://example:27017\"\n" +
 		"  db: \"pm_test\"\n" +
 		"  connect_timeout_seconds: 15\n" +
-		"  ping_timeout_seconds: 3\n"
+		"  ping_timeout_seconds: 3\n" +
+		"log:\n" +
+		"  dir: \"var/log/pm\"\n" +
+		"  max_size_mb: 50\n" +
+		"  max_backups: 3\n" +
+		"  format: \"console\"\n" +
+		"  level: \"warn\"\n"
 	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 		t.Fatalf("write tmp config: %v", err)
 	}
@@ -50,6 +56,21 @@ func TestLoadYAMLFile_ParsesTopLevelAndSection(t *testing.T) {
 	if cfg.Mongo.PingTimeoutSeconds != 3 {
 		t.Errorf("Mongo.PingTimeoutSeconds=%d", cfg.Mongo.PingTimeoutSeconds)
 	}
+	if cfg.Log.Dir != "var/log/pm" {
+		t.Errorf("Log.Dir=%q", cfg.Log.Dir)
+	}
+	if cfg.Log.MaxSizeMB != 50 {
+		t.Errorf("Log.MaxSizeMB=%d", cfg.Log.MaxSizeMB)
+	}
+	if cfg.Log.MaxBackups != 3 {
+		t.Errorf("Log.MaxBackups=%d", cfg.Log.MaxBackups)
+	}
+	if cfg.Log.Format != "console" {
+		t.Errorf("Log.Format=%q", cfg.Log.Format)
+	}
+	if cfg.Log.Level != "warn" {
+		t.Errorf("Log.Level=%q", cfg.Log.Level)
+	}
 }
 
 // 测试覆盖：环境变量覆盖配置文件值。
@@ -60,7 +81,11 @@ func TestLoad_EnvOverridesFile(t *testing.T) {
 		"http_addr: \":8080\"\n" +
 		"mongo:\n" +
 		"  uri: \"mongodb://file:27017\"\n" +
-		"  db: \"file_db\"\n"
+		"  db: \"file_db\"\n" +
+		"log:\n" +
+		"  dir: \"file_logs\"\n" +
+		"  max_size_mb: 10\n" +
+		"  max_backups: 2\n"
 	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 		t.Fatalf("write tmp config: %v", err)
 	}
@@ -69,6 +94,11 @@ func TestLoad_EnvOverridesFile(t *testing.T) {
 	t.Setenv("HTTP_ADDR", ":7777")
 	t.Setenv("MONGO_URI", "mongodb://env:27017")
 	t.Setenv("MONGO_DB", "env_db")
+	t.Setenv("LOG_DIR", "env_logs")
+	t.Setenv("LOG_MAX_SIZE_MB", "200")
+	t.Setenv("LOG_MAX_BACKUPS", "9")
+	t.Setenv("LOG_FORMAT", "console")
+	t.Setenv("LOG_LEVEL", "error")
 
 	cfg := Load()
 	if cfg.HTTPAddr != ":7777" {
@@ -79,6 +109,21 @@ func TestLoad_EnvOverridesFile(t *testing.T) {
 	}
 	if cfg.Mongo.DB != "env_db" {
 		t.Errorf("Mongo.DB=%q", cfg.Mongo.DB)
+	}
+	if cfg.Log.Dir != "env_logs" {
+		t.Errorf("Log.Dir=%q", cfg.Log.Dir)
+	}
+	if cfg.Log.MaxSizeMB != 200 {
+		t.Errorf("Log.MaxSizeMB=%d", cfg.Log.MaxSizeMB)
+	}
+	if cfg.Log.MaxBackups != 9 {
+		t.Errorf("Log.MaxBackups=%d", cfg.Log.MaxBackups)
+	}
+	if cfg.Log.Format != "console" {
+		t.Errorf("Log.Format=%q", cfg.Log.Format)
+	}
+	if cfg.Log.Level != "error" {
+		t.Errorf("Log.Level=%q", cfg.Log.Level)
 	}
 }
 

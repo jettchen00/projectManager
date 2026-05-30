@@ -21,12 +21,27 @@ type MongoConfig struct {
 	PingTimeoutSeconds    int
 }
 
+// LogConfig 日志相关配置。
+// Dir 为空表示输出到 stdout（默认行为，便于本地与测试环境）。
+// MaxSizeMB <=0 时由日志库使用其默认值（100MB）。
+// MaxBackups <=0 表示不限制历史备份数量。
+// Format："json"（默认）或 "console"。
+// Level："debug" / "info"（默认） / "warn" / "error"。
+type LogConfig struct {
+	Dir        string
+	MaxSizeMB  int
+	MaxBackups int
+	Format     string
+	Level      string
+}
+
 // Config 全局配置。
 type Config struct {
 	HTTPAddr               string
 	WebDir                 string
 	ShutdownTimeoutSeconds int
 	Mongo                  MongoConfig
+	Log                    LogConfig
 }
 
 // 默认配置文件路径（相对工作目录）。
@@ -43,6 +58,13 @@ func defaults() *Config {
 			DB:                    "project_manager",
 			ConnectTimeoutSeconds: 10,
 			PingTimeoutSeconds:    5,
+		},
+		Log: LogConfig{
+			Dir:        "", // 默认输出到 stdout
+			MaxSizeMB:  100,
+			MaxBackups: 7,
+			Format:     "json",
+			Level:      "info",
 		},
 	}
 }
@@ -68,6 +90,19 @@ func Load() *Config {
 	cfg.WebDir = envOr("WEB_DIR", cfg.WebDir)
 	cfg.Mongo.URI = envOr("MONGO_URI", cfg.Mongo.URI)
 	cfg.Mongo.DB = envOr("MONGO_DB", cfg.Mongo.DB)
+	cfg.Log.Dir = envOr("LOG_DIR", cfg.Log.Dir)
+	if v := strings.TrimSpace(os.Getenv("LOG_MAX_SIZE_MB")); v != "" {
+		if n, ok := parseInt(v); ok {
+			cfg.Log.MaxSizeMB = n
+		}
+	}
+	if v := strings.TrimSpace(os.Getenv("LOG_MAX_BACKUPS")); v != "" {
+		if n, ok := parseInt(v); ok {
+			cfg.Log.MaxBackups = n
+		}
+	}
+	cfg.Log.Format = envOr("LOG_FORMAT", cfg.Log.Format)
+	cfg.Log.Level = envOr("LOG_LEVEL", cfg.Log.Level)
 	return cfg
 }
 
@@ -168,21 +203,38 @@ func applyTopLevel(cfg *Config, key, val string) {
 }
 
 func applySection(cfg *Config, section, key, val string) {
-	if section != "mongo" {
-		return
-	}
-	switch key {
-	case "uri":
-		cfg.Mongo.URI = val
-	case "db":
-		cfg.Mongo.DB = val
-	case "connect_timeout_seconds":
-		if n, ok := parseInt(val); ok {
-			cfg.Mongo.ConnectTimeoutSeconds = n
+	switch section {
+	case "mongo":
+		switch key {
+		case "uri":
+			cfg.Mongo.URI = val
+		case "db":
+			cfg.Mongo.DB = val
+		case "connect_timeout_seconds":
+			if n, ok := parseInt(val); ok {
+				cfg.Mongo.ConnectTimeoutSeconds = n
+			}
+		case "ping_timeout_seconds":
+			if n, ok := parseInt(val); ok {
+				cfg.Mongo.PingTimeoutSeconds = n
+			}
 		}
-	case "ping_timeout_seconds":
-		if n, ok := parseInt(val); ok {
-			cfg.Mongo.PingTimeoutSeconds = n
+	case "log":
+		switch key {
+		case "dir":
+			cfg.Log.Dir = val
+		case "max_size_mb":
+			if n, ok := parseInt(val); ok {
+				cfg.Log.MaxSizeMB = n
+			}
+		case "max_backups":
+			if n, ok := parseInt(val); ok {
+				cfg.Log.MaxBackups = n
+			}
+		case "format":
+			cfg.Log.Format = val
+		case "level":
+			cfg.Log.Level = val
 		}
 	}
 }
